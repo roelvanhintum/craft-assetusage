@@ -5,6 +5,8 @@ namespace roelvanhintum\assetusage\console\controllers;
 use Craft;
 use craft\db\Query;
 use craft\db\Table;
+use craft\elements\Asset;
+use verbb\hyper\records\ElementCache as HyperElementCache;
 use yii\console\Controller;
 use yii\console\ExitCode;
 
@@ -93,6 +95,15 @@ class DefaultController extends Controller
             ->where(['elements.dateDeleted' => null])
             ->andWhere(['not exists', $subQueryRelations])
             ->andWhere(['not exists', $subQueryContent]);
+
+        if (Craft::$app->getPlugins()->isPluginEnabled('hyper')) {
+            $subQueryHyper = (new Query())
+                ->select('id')
+                ->from(['hyper_element_cache' => HyperElementCache::tableName()])
+                ->where('[[hyper_element_cache.targetId]] = [[assets.id]]')
+                ->andWhere(['targetType' => Asset::class]);
+            $query->andWhere(['not exists', $subQueryHyper]);
+        }
 
         if (isset($volumeModel)) {
             $query->where(['volumeId' => $volumeModel->id]);

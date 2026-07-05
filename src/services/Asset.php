@@ -113,7 +113,7 @@ class Asset extends Component
 
     private function queryHyperElementCache(AssetElement $asset): array
     {
-        if (! Craft::$app->getPlugins()->isPluginEnabled('hyper')) {
+        if (!Craft::$app->getPlugins()->isPluginEnabled('hyper')) {
             return [];
         }
 

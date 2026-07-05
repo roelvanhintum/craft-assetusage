@@ -9,6 +9,7 @@ use craft\db\Table;
 use craft\elements\Asset as AssetElement;
 use craft\helpers\ElementHelper;
 use roelvanhintum\assetusage\Plugin;
+use verbb\hyper\records\ElementCache as HyperElementCache;
 
 class Asset extends Component
 {
@@ -21,7 +22,11 @@ class Asset extends Component
      */
     public function getUsageCount(AssetElement $asset): string
     {
-        $relations = array_merge($this->queryRelations($asset), $this->queryContents($asset));
+        $relations = array_merge(
+            $this->queryRelations($asset),
+            $this->queryContents($asset),
+            $this->queryHyperElementCache($asset)
+        );
 
         if (Plugin::getInstance()->settings->includeRevisions) {
             return $this->formatResults(count($relations));
@@ -49,7 +54,11 @@ class Asset extends Component
      */
     public function getUsedIn(AssetElement $asset): array
     {
-        $relations = array_merge($this->queryRelations($asset), $this->queryContents($asset));
+        $relations = array_merge(
+            $this->queryRelations($asset),
+            $this->queryContents($asset),
+            $this->queryHyperElementCache($asset)
+        );
 
         $elements = [];
 
@@ -89,7 +98,7 @@ class Asset extends Component
         $query = (new Query())
         ->select(['elementId as id', 'siteId'])
         ->from(Table::ELEMENTS_SITES);
-    
+
         // PostgreSQL requires explicit casting for JSONB columns
         if (Craft::$app->getDb()->getIsPgsql()) {
             $query->where(['like', 'CAST(content AS TEXT)', "asset:{$asset->id}:"])
@@ -98,8 +107,24 @@ class Asset extends Component
             $query->where(['like', 'content', "asset:{$asset->id}:"])
                 ->orWhere(['like', 'content', "\"imageId\": \"{$asset->id}\","]);
         }
-        
+
         return $query->all();
+    }
+
+    private function queryHyperElementCache(AssetElement $asset): array
+    {
+        if (! Craft::$app->getPlugins()->isPluginEnabled('hyper')) {
+            return [];
+        }
+
+        return (new Query())
+            ->select(['sourceId as id', 'sourceSiteId as siteId'])
+            ->from(['element_cache' => HyperElementCache::tableName()])
+            ->where([
+                'targetId' => $asset->id,
+                'targetType' => AssetElement::class,
+            ])
+            ->all();
     }
 
     /**

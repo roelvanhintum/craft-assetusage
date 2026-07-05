@@ -3,11 +3,13 @@
 <div class="elementselect">
 	<div class="elements">
 		{% for element in elements %}
-			<a href="{{ element.cpEditUrl }}" class="element small hasstatus">
-				<div class="label">
-					<span class="title">{{element.title}}</span>
+			<a href="{{ element.cpEditUrl }}" class="chip small element">
+				<div class="chip-content">
+					<span class="status {{ element.status }}" role="img" aria-label="Status: {{ element.status }}"></span>
+					<div class="label">
+						<span class="label-link">{{element.title}}</span>
+					</div>
 				</div>
-				<span class="status {{ element.status }}" role="img"></span>
 			</a>
 		{% endfor %}
 	</div>

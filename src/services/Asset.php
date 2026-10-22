@@ -10,6 +10,7 @@ use craft\elements\Asset as AssetElement;
 use craft\helpers\ElementHelper;
 use roelvanhintum\assetusage\Plugin;
 use verbb\hyper\records\ElementCache as HyperElementCache;
+use verbb\hyper\records\LinkRelation as HyperLinkRelation;
 
 class Asset extends Component
 {
@@ -25,7 +26,7 @@ class Asset extends Component
         $relations = array_merge(
             $this->queryRelations($asset),
             $this->queryContents($asset),
-            $this->queryHyperElementCache($asset)
+            $this->queryHyperRelations($asset)
         );
 
         if (Plugin::getInstance()->settings->includeRevisions) {
@@ -57,7 +58,7 @@ class Asset extends Component
         $relations = array_merge(
             $this->queryRelations($asset),
             $this->queryContents($asset),
-            $this->queryHyperElementCache($asset)
+            $this->queryHyperRelations($asset)
         );
 
         $elements = [];
@@ -111,15 +112,24 @@ class Asset extends Component
         return $query->all();
     }
 
-    private function queryHyperElementCache(AssetElement $asset): array
+    private function queryHyperRelations(AssetElement $asset): array
     {
         if (!Craft::$app->getPlugins()->isPluginEnabled('hyper')) {
             return [];
         }
 
+        // Hyper 3 replaces the element cache with a relation index and owner columns.
+        if (class_exists(HyperLinkRelation::class)) {
+            $table = HyperLinkRelation::tableName();
+            $columns = ['ownerId as id', 'ownerSiteId as siteId'];
+        } else {
+            $table = HyperElementCache::tableName();
+            $columns = ['sourceId as id', 'sourceSiteId as siteId'];
+        }
+
         return (new Query())
-            ->select(['sourceId as id', 'sourceSiteId as siteId'])
-            ->from(['element_cache' => HyperElementCache::tableName()])
+            ->select($columns)
+            ->from($table)
             ->where([
                 'targetId' => $asset->id,
                 'targetType' => AssetElement::class,

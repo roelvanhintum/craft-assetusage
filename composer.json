@@ -31,7 +31,7 @@
     "require-dev": {
         "craftcms/ecs": "dev-main",
         "craftcms/phpstan": "dev-main",
-        "verbb/hyper": "^2.0.0"
+        "verbb/hyper": "^2.0.0 || ^3.0.0"
     },
     "scripts": {
         "phpstan": "phpstan --ansi --memory-limit=1G",

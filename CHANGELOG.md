@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## Unreleased
+
+### Fixed
+
+- Fixed Hyper asset usage queries for Hyper 3 while retaining Hyper 2 support, extending [#55](https://github.com/roelvanhintum/craft-assetusage/pull/55).
+- Fixed volume-filtered unused asset commands including assets that are still in use.
+
 ## 4.3.0 - 2026-07-05
 
 ### Added

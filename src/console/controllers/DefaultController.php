@@ -7,6 +7,7 @@ use craft\db\Query;
 use craft\db\Table;
 use craft\elements\Asset;
 use verbb\hyper\records\ElementCache as HyperElementCache;
+use verbb\hyper\records\LinkRelation as HyperLinkRelation;
 use yii\console\Controller;
 use yii\console\ExitCode;
 
@@ -97,16 +98,21 @@ class DefaultController extends Controller
             ->andWhere(['not exists', $subQueryContent]);
 
         if (Craft::$app->getPlugins()->isPluginEnabled('hyper')) {
+            // Both Hyper versions index targets, but Hyper 3 removes the element cache.
+            $table = class_exists(HyperLinkRelation::class)
+                ? HyperLinkRelation::tableName()
+                : HyperElementCache::tableName();
+
             $subQueryHyper = (new Query())
                 ->select('id')
-                ->from(['hyper_element_cache' => HyperElementCache::tableName()])
-                ->where('[[hyper_element_cache.targetId]] = [[assets.id]]')
+                ->from(['hyper_relations' => $table])
+                ->where('[[hyper_relations.targetId]] = [[assets.id]]')
                 ->andWhere(['targetType' => Asset::class]);
             $query->andWhere(['not exists', $subQueryHyper]);
         }
 
         if (isset($volumeModel)) {
-            $query->where(['volumeId' => $volumeModel->id]);
+            $query->andWhere(['volumeId' => $volumeModel->id]);
         }
 
         return $query->all();
